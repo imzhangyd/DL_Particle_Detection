@@ -21,33 +21,36 @@ from loss.detnetloss import EarlyStopping
 
 if __name__ == "__main__":
 
-    #         # # for scen in ['MICROTUBULE','RECEPTOR','VESICLE','merge']:
-    # for scen in ['MICROTUBULE','RECEPTOR','VESICLE']:
-    #     for sn in ['SNR7']:
-    #         #     for sn in ['SNR4','SNR7','merge_SNR']:
+    # for scen in ['MICROTUBULE','RECEPTOR','VESICLE','merge']:
+    dataroot = '/data/ldap_shared/synology_shared/zyd/data/'
+
+
+    scen = 'RECEPTOR'
+    sn = 'SNR2'
+    logtxt_path_opt = './Log/'+scen+'_'+sn+'/log.txt'
+    if not os.path.exists('./Log/'+scen+'_'+sn):
+        os.makedirs('./Log/'+scen+'_'+sn)
+    # for alpha in np.linspace(0,1,21):
+    opt = {}
+    opt['alpha'] = 0.1
 
     now = int(round(time.time()*1000))
     nowname = time.strftime('%Y%m%d_%H_%M_%S',time.localtime(now/1000))
 
-    scen = 'RECEPTOR'
-    sn = 'SNR2'
-
     # ====================================================================
     operation = 'trainval' # train trainval inference
-    train_datapath = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/train_'+scen+'/'+sn+'/'
-    val_datapath = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/val_'+scen+'/'+sn+'/'
-    # train_datapath = './Data/train/'
-    # val_datapath = './Data/val/'
+    train_datapath = '/data/ldap_shared/shared/zyd/data/20220611_detparticle/train_'+scen+'/'+sn+'/'
+    val_datapath = '/data/ldap_shared/shared/zyd/data/20220611_detparticle/val_'+scen+'/'+sn+'/'
     total_epoch = 200
 
-    model_mode = 'superpoint'
+    model_mode = 'DetNet'
     loss_mode = 'soft_dice'
     opti_mode = 'amsAdam'
     lr = 0.001
     decay_every = 1e10
-    gpu_list = [3]
-    bs = len(gpu_list)*1
-    # bs = 32
+    gpu_list = [0]
+    # bs = len(gpu_list)*2
+    bs = 2
     ckp_name = None
     # ckp_name = '20211215_20_13_10' # None or path
     if not ckp_name is None:
@@ -86,7 +89,7 @@ if __name__ == "__main__":
     # load data model loss and optimizer 
     dataloader_ins = func_getdataloader(train_datapath,batch_size=bs,shuffle=True,num_workers=16)
     dataloaderval_ins = func_getdataloader(val_datapath,batch_size=bs,shuffle=False,num_workers=16)
-    model_ins = func_getnetwork(model_mode)
+    model_ins = func_getnetwork(model_mode,opt)
     init_weights(model_ins)
 
     # if use GPU
@@ -193,9 +196,10 @@ if __name__ == "__main__":
                 #     iouval = np.array(func_ioucreterion(pred[0].cpu(),lab,0.5)).mean()*0.5 + np.array(func_ioucreterion(pred[1].cpu(),lab,0.5)).mean()*0.5
                 # else:
                 loss = cal_loss_ins(pred,lab)
-                pred_heatmap = get_fullheatmap_from_fold(pred)
-                lab_heatmap = get_fullheatmap_from_fold(lab)
-                iouval = f1_score(pred_heatmap,lab_heatmap)
+                if model_mode == 'superpoint':
+                    pred = get_fullheatmap_from_fold(pred)
+                    lab = get_fullheatmap_from_fold(lab)
+                iouval = f1_score(pred,lab)
                 # loss = cal_loss_ins(pred[0],lab)*0.5 + cal_loss_ins(pred[1],lab)*0.5
                 loss_ = loss.item()
                 f1_ = iouval.item()
@@ -223,8 +227,14 @@ if __name__ == "__main__":
                 print("此时早停！")
                 break
 
-    mesg = '==>best epoch:{} val loss:{:5f}'.format(best_epoch,best_valloss)
+    mesg = '==>best epoch:{} val loss:{:.5f}'.format(best_epoch,best_valloss)
     print(mesg)
     logtxt = open(logtxt_path,'a+')
     logtxt.write(mesg+'\n')
     logtxt.close()
+    if model_mode == 'DetNet':
+        mmess = '{}--alpha={:.3f}--best epoch:{}--val loss:{:.5f}\n'.format(nowname,opt['alpha'],best_epoch,best_valloss)
+        print(mmess)
+        logtxt_ = open(logtxt_path_opt,'a+')
+        logtxt_.write(mmess)
+        logtxt_.close()

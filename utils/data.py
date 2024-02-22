@@ -149,7 +149,7 @@ def get_probabilities(
 
 
 
-#---------------------Detnet-----superpoint---------
+#---------------------Detnet-----superpoint--------- inference
 def get_coordinates(mask: np.ndarray, thre=0.5) -> np.ndarray:
     """Segmentation mask -> coordinate list."""
     # binary = np.round(mask.squeeze())  # 这一步就是变成二值化
@@ -164,11 +164,6 @@ def get_coordinates(mask: np.ndarray, thre=0.5) -> np.ndarray:
 def get_fullheatmap_from_fold(sfarr,foldtime=4): # [N,C,H,W]
     
     H,W = sfarr.shape[-2:]
-    # sf = nn.Softmax(dim = 1)
-    # sfarr = sf(arr)
-    # sfarr = sfarr[:,:-1,:,:]
-    # Hc = int(H/foldtime)
-    # Wc = int(W/foldtime)
     sfarr = sfarr.permute(0,2,3,1)
     sfarr = sfarr.reshape([-1,H,W,foldtime,foldtime])
     sfarr = sfarr.permute(0,1,3,2,4)

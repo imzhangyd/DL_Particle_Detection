@@ -6,7 +6,7 @@ from model.DetNet import cls_DetNet
 from torch.nn.functional import alpha_dropout
 from model.superPoint import SuperPointNet
 
-def func_getnetwork(name = 'unet'):
+def func_getnetwork(name,opt):
     if name == 'unet':
         # return cls_Unet(1,1)
         return UNet(1)
@@ -16,7 +16,7 @@ def func_getnetwork(name = 'unet'):
     elif name == 'deepBlink':
         return(deepBlink(1))
     elif name == 'DetNet':
-        return(cls_DetNet(alpha = 0.1))
+        return(cls_DetNet(alpha = opt['alpha']))
     elif name == 'superpoint':
         return(SuperPointNet())
 
