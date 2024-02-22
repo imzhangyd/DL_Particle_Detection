@@ -2,7 +2,7 @@
 from dataset.dataload import func_getdataloader
 from model.choose_net import func_getnetwork
 from creterion.iou import func_ioucreterion
-from utils.data import get_coordinates,get_probabilities,get_fullheatmap_from_fold
+from utils.data import get_coordinates,get_probabilities
 from creterion.f1 import compute_metrics_once
 import torch
 import torch.nn as nn
@@ -18,13 +18,13 @@ nowname = time.strftime('%Y%m%d_%H_%M_%S',time.localtime(now/1000))
 
 # ===================================================================================================
 operation = 'inferance' # train trainval inferance
-val_datapath = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/val_RECEPTOR/SNR2/'
-test_datapath = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/testdataset/test_RECEPTOR/SNR2/'
-load_epoch = 39
+val_datapath = '/ldap_shared/shared/zyd/data/20220611_detparticle/val_VESICLE/SNR7/'
+test_datapath = '/ldap_shared/shared/zyd/data/20220611_detparticle/testdataset/test_VESICLE/SNR7/'
+load_epoch = 108
 bs = 1
-model_mode = 'superpoint'
-gpu_list = [1]
-ckp_name = '20220619_14_00_57'
+model_mode = 'DetNet'
+gpu_list = [2]
+ckp_name = '20220621_00_16_04'
 ckp_path = os.path.join('./Log/',ckp_name+ "/checkpoints/checkpoints_" + str(load_epoch) + ".pth")
 # ====================================================================================================
 opt = {}
@@ -46,9 +46,8 @@ logtxt.close()
 
 
 # load data model
-dataloader_ins_val = func_getdataloader(val_datapath,batch_size=bs,shuffle=False,num_workers=16 )
-dataloader_ins_test = func_getdataloader(test_datapath,batch_size=bs,shuffle=False,num_workers=16  )
-
+dataloader_ins_val = func_getdataloader(val_datapath,batch_size=bs,shuffle=False,num_workers=16,training=False )
+dataloader_ins_test = func_getdataloader(test_datapath,batch_size=bs,shuffle=False,num_workers=16,training=False  )
 model_ins = func_getnetwork(model_mode,opt)
 
 # if use GPU
@@ -78,19 +77,11 @@ for thre in range(1,10):
     since = time.time()
     for data in dataloader_ins_val:
         inp = data[0].to(device)
-        if model_mode == 'superpoint':
-            lab = data[1]
-            lab_heatmap = get_fullheatmap_from_fold(lab)[0]
-            lab_coords = get_coordinates(lab_heatmap, thre=0.5)
+        lab_coords = data[1][0].numpy()[:,::-1]
+        # lab_coords = get_coordinates(lab, thre=0.5)
+        pred = model_ins(inp)[0].permute(1,2,0).detach().cpu().numpy()
+        pred_coords = get_coordinates(pred, thre=thre*0.1)
 
-            pred = model_ins(inp)
-            pred_heatmap = get_fullheatmap_from_fold(pred)[0].detach().cpu().numpy()
-            pred_coords = get_coordinates(pred_heatmap, thre=thre*0.1)
-        elif model_mode == 'detnet':
-            lab_coords = data[1][0].numpy()[:,::-1]
-            # lab_coords = get_coordinates(lab, thre=0.5)
-            pred = model_ins(inp)[0].permute(1,2,0).detach().cpu().numpy()
-            pred_coords = get_coordinates(pred, thre=thre*0.1)
         f1_,precis_,recall_,abs_euclideans = compute_metrics_once(pred=pred_coords,true=lab_coords,mdist=3.0)            
         f1_list.append(f1_)
         precis_list.append(precis_)
@@ -135,22 +126,13 @@ recall_list = []
 abs_euclideans_list = []
 for data in dataloader_ins_test:
     inp = data[0].to(device)
-    name = data[2][0]
+    name = data[2][0]    
     inputimage = data[3][0].numpy()
-    if model_mode == 'superpoint':
-        lab = data[1]
-        lab_heatmap = get_fullheatmap_from_fold(lab)[0]
-        lab_coords = get_coordinates(lab_heatmap,thre=0.5)
+    lab_coords = data[1][0].numpy()[:,::-1]
+    # lab_coords = get_coordinates(lab,thre=0.5)
+    pred = model_ins(inp)[0].permute(1,2,0).detach().cpu().numpy()
+    pred_coords = get_coordinates(pred,thre=thre_max)
 
-        pred = model_ins(inp)
-        pred_heatmap = get_fullheatmap_from_fold(pred)[0].detach().cpu().numpy()
-        pred_coords = get_coordinates(pred_heatmap,thre=thre_max)
-    elif model_mode == 'detnet':
-        inputimage = data[3][0].numpy()
-        lab_coords = data[1][0].numpy()[:,::-1]
-        # lab_coords = get_coordinates(lab,thre=0.5)
-        pred = model_ins(inp)[0].permute(1,2,0).detach().cpu().numpy()
-        pred_coords = get_coordinates(pred,thre=thre_max)
     f1_,precis_,recall_,abs_euclideans = compute_metrics_once(pred=pred_coords,true=lab_coords,mdist=3.0)            
     f1_list.append(f1_)
     precis_list.append(precis_)
