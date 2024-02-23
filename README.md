@@ -3,7 +3,24 @@ Deep learning methods for particle detection in microscopy images.
 
 It covers four deep-learning model, including DetNet[1], deepBlink[2], superpoint[3], and HigherHRNet[4]. HigherHRNet[4] was modified and renamed as PointDet in this repository.
 
+## Environment
+The code is developed using python 3.7.3 on Ubuntu 18.04. NVIDIA GPUs are needed. The code is developed and tested using 1 NVIDIA GeForce RTX 2080 Ti card.
+## Quick Start
+### Installation
+1. Create a virtual environment
+```
+conda create -n dl_particle_detection python==3.7.3
+conda activate dl_particle_detection
+```
+2. Install pytorch==1.8.0+cu111 torchvision==0.9.0+cu111
+```
+pip install torch==1.8.0+cu111 torchvision==0.9.0+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+```
+3. Clone this repo
 
+
+### Data preparation
+Isbi particle tracking challenge
 
 
 
