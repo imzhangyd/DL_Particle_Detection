@@ -322,7 +322,9 @@ def compute_metrics_once(
     pred: np.ndarray, true: np.ndarray, mdist: float = 3.0
 ) -> pd.DataFrame:
     # f1_scores, offsets, cutoffs = f1_integral(pred, true, mdist=mdist, n_cutoffs=50, return_raw=True)
+
     matrix = scipy.spatial.distance.cdist(pred, true, metric="euclidean")
+    # print(matrix.shape)
     f1_,precis_,recall_,rows,cols = _f1_at_cutoff(matrix, pred, true, cutoff=mdist,return_raw=False,outuse=True)
 
     c_offset = _get_offsets(pred, true, rows, cols)

@@ -1,7 +1,8 @@
 # from pyexpat import model
-from dataset.dataload import func_getdataloader
+from dataset.dataload import func_getdataloader,func_getdataloader_16
 from model.choose_net import func_getnetwork
 from creterion.iou import func_ioucreterion
+from utils.data import get_coordinate_list
 from utils.data import get_coordinates,get_probabilities,get_fullheatmap_from_fold
 from creterion.f1 import compute_metrics_once
 import torch
@@ -18,14 +19,16 @@ nowname = time.strftime('%Y%m%d_%H_%M_%S',time.localtime(now/1000))
 
 # ===================================================================================================
 operation = 'inferance' # train trainval inferance
-val_datapath = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/val_RECEPTOR/SNR2/'
-test_datapath = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/testdataset/test_RECEPTOR/SNR2/'
-load_epoch = 39
+val_datapath = '/mnt/data1/ZYDdata/helabdata_train_detection/SP_FC_1C_Control/trainvaltest/val/'
+test_datapath = '/mnt/data1/ZYDdata/helabdata_train_detection/SP_FC_1C_Control/trainvaltest/val/'
+datatype = '16bit' #
+load_epoch = 1
 bs = 1
-model_mode = 'superpoint'
+model_mode = 'deepBlink'
 gpu_list = [1]
-ckp_name = '20220619_14_00_57'
-ckp_path = os.path.join('./Log/',ckp_name+ "/checkpoints/checkpoints_" + str(load_epoch) + ".pth")
+ckp_folder = './Log/'
+ckp_name = '20240222_20_52_50'
+ckp_path = os.path.join(ckp_folder,ckp_name+ "/checkpoints/checkpoints_" + str(load_epoch) + ".pth")
 # ====================================================================================================
 opt = {}
 opt['alpha'] = 0.25
@@ -46,8 +49,12 @@ logtxt.close()
 
 
 # load data model
-dataloader_ins_val = func_getdataloader(val_datapath,batch_size=bs,shuffle=False,num_workers=16 )
-dataloader_ins_test = func_getdataloader(test_datapath,batch_size=bs,shuffle=False,num_workers=16  )
+if datatype == '16bit':
+    dataloader_ins_val = func_getdataloader_16(model_mode, val_datapath,batch_size=bs,shuffle=False,num_workers=16,training=False)
+    dataloader_ins_test = func_getdataloader_16(model_mode, test_datapath,batch_size=bs,shuffle=False,num_workers=16,training=False)
+else:
+    dataloader_ins_val = func_getdataloader(model_mode, val_datapath,batch_size=bs,shuffle=False,num_workers=16,training=False)
+    dataloader_ins_test = func_getdataloader(model_mode, test_datapath,batch_size=bs,shuffle=False,num_workers=16,training=False)
 
 model_ins = func_getnetwork(model_mode,opt)
 
@@ -69,6 +76,7 @@ model_ins.eval()
 f1_max = 0
 thre_max = 0.1
 for thre in range(1,10):
+    print(f'threshold:{thre}')
     loss_ = 0
     f1_list = []
     precis_list = []
@@ -77,6 +85,7 @@ for thre in range(1,10):
 
     since = time.time()
     for data in dataloader_ins_val:
+
         inp = data[0].to(device)
         if model_mode == 'superpoint':
             lab = data[1]
@@ -86,12 +95,23 @@ for thre in range(1,10):
             pred = model_ins(inp)
             pred_heatmap = get_fullheatmap_from_fold(pred)[0].detach().cpu().numpy()
             pred_coords = get_coordinates(pred_heatmap, thre=thre*0.1)
-        elif model_mode == 'detnet':
+        elif model_mode == 'DetNet':
             lab_coords = data[1][0].numpy()[:,::-1]
             # lab_coords = get_coordinates(lab, thre=0.5)
             pred = model_ins(inp)[0].permute(1,2,0).detach().cpu().numpy()
             pred_coords = get_coordinates(pred, thre=thre*0.1)
-        f1_,precis_,recall_,abs_euclideans = compute_metrics_once(pred=pred_coords,true=lab_coords,mdist=3.0)            
+        elif model_mode == 'deepBlink':
+            if datatype == '16bit':
+                lab = data[1][0]
+                lab_coords = get_coordinate_list(lab, image_size=max(inp.shape), probability=0.5)
+            else:
+                lab_coords = data[1][0].numpy()[:,::-1]
+            pred = model_ins(inp)[0].permute(1,2,0).detach().cpu().numpy()
+            pred_coords = get_coordinate_list(pred, image_size=max(inp.shape), probability=thre*0.1)
+        if pred_coords.shape[0] == 0 or lab_coords.shape == 0:
+            f1_,precis_,recall_,abs_euclideans = 0,0,0,1e10
+        else:
+            f1_,precis_,recall_,abs_euclideans = compute_metrics_once(pred=pred_coords,true=lab_coords,mdist=3.0)            
         f1_list.append(f1_)
         precis_list.append(precis_)
         recall_list.append(recall_)
@@ -145,12 +165,19 @@ for data in dataloader_ins_test:
         pred = model_ins(inp)
         pred_heatmap = get_fullheatmap_from_fold(pred)[0].detach().cpu().numpy()
         pred_coords = get_coordinates(pred_heatmap,thre=thre_max)
-    elif model_mode == 'detnet':
-        inputimage = data[3][0].numpy()
+    elif model_mode == 'DetNet':
         lab_coords = data[1][0].numpy()[:,::-1]
         # lab_coords = get_coordinates(lab,thre=0.5)
         pred = model_ins(inp)[0].permute(1,2,0).detach().cpu().numpy()
         pred_coords = get_coordinates(pred,thre=thre_max)
+    elif model_mode == 'deepBlink':
+        if datatype == '16bit':
+            lab_coords = get_coordinate_list(lab, image_size=max(inp.shape), probability=0.5)
+        else:
+            lab_coords = data[1][0].numpy()[:,::-1]
+        pred = model_ins(inp)[0].permute(1,2,0).detach().cpu().numpy()
+        pred_coords = get_coordinate_list(pred, image_size=max(inp.shape), probability=thre_max)
+    
     f1_,precis_,recall_,abs_euclideans = compute_metrics_once(pred=pred_coords,true=lab_coords,mdist=3.0)            
     f1_list.append(f1_)
     precis_list.append(precis_)
@@ -173,11 +200,9 @@ for data in dataloader_ins_test:
     for x,y in lab_coords:
         cv2.circle(inputimage, (int(y), int(x)), 1, (0, 0, 255), 1)
 
-
     # print('save:'+name)
     cv2.imwrite(inf_dir+'/'+name+'_f1{:.3f}.png'.format(f1_),inputimage)
 
-    
 message = '==>>[TEST]threthold:{:.1f} f1:{:.3f} precision:{:.3f} recall:{:.3f} rmse:{:.3f}'.format(
         thre_max,
         np.array(f1_list).mean(), 
@@ -190,6 +215,3 @@ print('=====>>>>'+nowname)
 print(test_datapath.split('/')[-3])
 print(test_datapath.split('/')[-2])
 print(test_datapath.split('/')[-1])
-
-
-

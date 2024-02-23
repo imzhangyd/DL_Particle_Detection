@@ -50,7 +50,7 @@ def get_fold_label(arr, size, fold_time=4):
 
         
 class cls_Dataset(Dataset):
-    def __init__(self,txtfile,imagesize = 512, cell_size=4,smooth_factor=1):
+    def __init__(self,txtfile,imagesize = 512, cell_size=4,smooth_factor=1,training= True):
         super(cls_Dataset,self).__init__()
         self.image_size = imagesize
         self.cell_size = cell_size

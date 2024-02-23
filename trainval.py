@@ -1,11 +1,11 @@
 from optimizer.choose_optimizer import func_getoptimizer
-from dataset.dataload import func_getdataloader
+from dataset.dataload import func_getdataloader,func_getdataloader_16
 from loss.choose_loss import func_getloss
 from model.choose_net import func_getnetwork
 from optimizer.update_opti_lr import func_update_opti_lr
 from model.init_model import init_weights
 from creterion.iou import func_ioucreterion
-from loss.detnetloss import f1_score
+# from loss.detnetloss import f1_score
 from utils.data import get_fullheatmap_from_fold
 # from creterion.rmse import z
 # from creterion.rmse import rmse_
@@ -18,18 +18,18 @@ import time
 
 from loss.detnetloss import EarlyStopping
 # import ipdb
+import shutil
 
 if __name__ == "__main__":
 
-    # for scen in ['MICROTUBULE','RECEPTOR','VESICLE','merge']:
     dataroot = '/data/ldap_shared/synology_shared/zyd/data/'
-
 
     scen = 'RECEPTOR'
     sn = 'SNR2'
-    logtxt_path_opt = './Log/'+scen+'_'+sn+'/log.txt'
-    if not os.path.exists('./Log/'+scen+'_'+sn):
-        os.makedirs('./Log/'+scen+'_'+sn)
+    Log_path = './Log/'
+    logtxt_path_opt = Log_path+scen+'_'+sn+'/log.txt'
+    if not os.path.exists(Log_path+scen+'_'+sn):
+        os.makedirs(Log_path+scen+'_'+sn)
     # for alpha in np.linspace(0,1,21):
     opt = {}
     opt['alpha'] = 0.1
@@ -39,12 +39,21 @@ if __name__ == "__main__":
 
     # ====================================================================
     operation = 'trainval' # train trainval inference
-    train_datapath = '/data/ldap_shared/shared/zyd/data/20220611_detparticle/train_'+scen+'/'+sn+'/'
-    val_datapath = '/data/ldap_shared/shared/zyd/data/20220611_detparticle/val_'+scen+'/'+sn+'/'
+    # train_datapath = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/train_'+scen+'/'+sn+'/'
+    # val_datapath = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/val_'+scen+'/'+sn+'/'
+    train_datapath = '/mnt/data1/ZYDdata/helabdata_train_detection/SP_FC_1C_Control/trainvaltest/train/'
+    val_datapath = '/mnt/data1/ZYDdata/helabdata_train_detection/SP_FC_1C_Control/trainvaltest/val/'
+    
     total_epoch = 200
+    datatype = '16bit' #
 
-    model_mode = 'DetNet'
-    loss_mode = 'soft_dice'
+    model_mode = 'deepBlink'
+
+    if model_mode == 'deepBlink':
+        from loss.deepblinkloss import f1_score
+    else:
+        from loss.detnetloss import f1_score
+    loss_mode = 'combined_dice_rmse' #combined_dice_rmse  soft_dice
     opti_mode = 'amsAdam'
     lr = 0.001
     decay_every = 1e10
@@ -55,19 +64,19 @@ if __name__ == "__main__":
     # ckp_name = '20211215_20_13_10' # None or path
     if not ckp_name is None:
         load_epoch = 28
-        ckp_path = os.path.join('./Log/',ckp_name+ "/checkpoints/checkpoints_" + str(load_epoch) + ".pth")
+        ckp_path = os.path.join(Log_path,ckp_name+ "/checkpoints/checkpoints_" + str(load_epoch) + ".pth")
 
     # ====================================================================
+    
+    logtxt_path = Log_path+nowname+'/log.txt'
+    if not os.path.exists(Log_path+nowname):
+        os.makedirs(Log_path+nowname)
 
+    thisfilepath = os.path.abspath(__file__)
+    shutil.copy(thisfilepath, Log_path+nowname+'/trainval_file.py')
 
     viz = Visdom(env=nowname, port=4006)
     # record log
-    logtxt_path = './Log/'+nowname+'/log.txt'
-
-    if not os.path.exists('./Log/'+nowname):
-        os.makedirs('./Log/'+nowname)
-
-
     logtxt = open(logtxt_path,'a+')
     logtxt.write('\n\n')
     logtxt.write('=============={}===============\n'.format(nowname))
@@ -87,8 +96,12 @@ if __name__ == "__main__":
 
 
     # load data model loss and optimizer 
-    dataloader_ins = func_getdataloader(train_datapath,batch_size=bs,shuffle=True,num_workers=16)
-    dataloaderval_ins = func_getdataloader(val_datapath,batch_size=bs,shuffle=False,num_workers=16)
+    if datatype == '16bit':
+        dataloader_ins = func_getdataloader_16(model_mode,train_datapath,batch_size=bs,shuffle=True,num_workers=16)
+        dataloaderval_ins = func_getdataloader_16(model_mode,val_datapath,batch_size=bs,shuffle=True,num_workers=16)  # bs=1?
+    else:
+        dataloader_ins = func_getdataloader(model_mode,train_datapath,batch_size=bs,shuffle=True,num_workers=16)
+        dataloaderval_ins = func_getdataloader(model_mode,val_datapath,batch_size=bs,shuffle=False,num_workers=16)
     model_ins = func_getnetwork(model_mode,opt)
     init_weights(model_ins)
 
@@ -109,7 +122,7 @@ if __name__ == "__main__":
 
 
     # make save folder
-    ckt_dir = './Log/'+nowname+'/checkpoints'
+    ckt_dir = Log_path+nowname+'/checkpoints'
     if not os.path.exists(ckt_dir):
         os.makedirs(ckt_dir)
 
