@@ -5,6 +5,8 @@ from model.deepBlink import deepBlink
 from model.DetNet import cls_DetNet
 from torch.nn.functional import alpha_dropout
 from model.superPoint import SuperPointNet
+from model.hrnet_dekr import PoseHigherResolutionNet
+
 
 def func_getnetwork(name,opt):
     if name == 'unet':
@@ -19,4 +21,6 @@ def func_getnetwork(name,opt):
         return(cls_DetNet(alpha = opt['alpha']))
     elif name == 'superpoint':
         return(SuperPointNet())
+    elif name == 'PointDet':
+        return(PoseHigherResolutionNet(opt['cfg']))
 

@@ -15,10 +15,36 @@ import torch.nn as nn
 import numpy as np
 import os
 import time
-
+import argparse
+from config.default import _C as cfg
+from config.default import update_config
 from loss.detnetloss import EarlyStopping
 # import ipdb
 import shutil
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Train keypoints network')
+    # general
+    parser.add_argument('--cfg', type=str,default='./config/inference_demo_coco.yaml')
+    # parser.add_argument('--videoFile', type=str, required=True)
+    parser.add_argument('--outputDir', type=str, default='/output/')
+    # parser.add_argument('--inferenceFps', type=int, default=10)
+    parser.add_argument('--visthre', type=float, default=0)
+    parser.add_argument('opts',
+                        help='Modify config options using the command-line',
+                        default=None,
+                        nargs=argparse.REMAINDER)
+
+    args = parser.parse_args()
+
+    # args expected by supporting codebase
+    args.modelDir = ''
+    args.logDir = ''
+    args.dataDir = ''
+    args.prevModelDir = ''
+    return args
+
 
 if __name__ == "__main__":
 
@@ -38,22 +64,26 @@ if __name__ == "__main__":
     nowname = time.strftime('%Y%m%d_%H_%M_%S',time.localtime(now/1000))
 
     # ====================================================================
+    args = parse_args()
+    update_config(cfg, args)
+    opt['cfg'] = cfg
+
     operation = 'trainval' # train trainval inference
-    # train_datapath = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/train_'+scen+'/'+sn+'/'
-    # val_datapath = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/val_'+scen+'/'+sn+'/'
-    train_datapath = '/mnt/data1/ZYDdata/helabdata_train_detection/SP_FC_1C_Control/trainvaltest/train/'
-    val_datapath = '/mnt/data1/ZYDdata/helabdata_train_detection/SP_FC_1C_Control/trainvaltest/val/'
+    train_datapath = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/train_'+scen+'/'+sn+'/'
+    val_datapath = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/val_'+scen+'/'+sn+'/'
+    # train_datapath = '/mnt/data1/ZYDdata/helabdata_train_detection/SP_FC_1C_Control/trainvaltest/train/'
+    # val_datapath = '/mnt/data1/ZYDdata/helabdata_train_detection/SP_FC_1C_Control/trainvaltest/val/'
     
     total_epoch = 200
-    datatype = '16bit' #
+    datatype = '8bit' #
 
-    model_mode = 'deepBlink'
+    model_mode = 'PointDet'
 
     if model_mode == 'deepBlink':
         from loss.deepblinkloss import f1_score
     else:
         from loss.detnetloss import f1_score
-    loss_mode = 'combined_dice_rmse' #combined_dice_rmse  soft_dice
+    loss_mode = 'soft_dice' #combined_dice_rmse  soft_dice
     opti_mode = 'amsAdam'
     lr = 0.001
     decay_every = 1e10
@@ -98,10 +128,10 @@ if __name__ == "__main__":
     # load data model loss and optimizer 
     if datatype == '16bit':
         dataloader_ins = func_getdataloader_16(model_mode,train_datapath,batch_size=bs,shuffle=True,num_workers=16)
-        dataloaderval_ins = func_getdataloader_16(model_mode,val_datapath,batch_size=bs,shuffle=True,num_workers=16)  # bs=1?
+        dataloaderval_ins = func_getdataloader_16(model_mode,val_datapath,batch_size=1,shuffle=True,num_workers=16)  # bs=1?
     else:
         dataloader_ins = func_getdataloader(model_mode,train_datapath,batch_size=bs,shuffle=True,num_workers=16)
-        dataloaderval_ins = func_getdataloader(model_mode,val_datapath,batch_size=bs,shuffle=False,num_workers=16)
+        dataloaderval_ins = func_getdataloader(model_mode,val_datapath,batch_size=1,shuffle=False,num_workers=16)
     model_ins = func_getnetwork(model_mode,opt)
     init_weights(model_ins)
 
@@ -152,13 +182,26 @@ if __name__ == "__main__":
             inp = data[0].to(device)
             lab = data[1].to(device)
 
-            pred = model_ins(inp)
-            # if model_mode == 'unet':
-            #     loss = cal_loss_ins(pred,lab)
-            # if model_mode == 'unetunet':
-            #     loss = cal_loss_ins(pred[0],lab)*0.5 + cal_loss_ins(pred[1],lab)*0.5
-            # else:
-            loss = cal_loss_ins(pred,lab)
+            if model_mode == 'PointDet':
+                heatmap = data[2].to(device)
+                mask = data[3].to(device)
+
+                offset = data[4].to(device)
+                offset_w = data[5].to(device)
+                        
+
+                pheatmap,poffset,psegment = model_ins(inp)
+                seg_loss = cal_loss_ins(psegment,lab)
+                # print(heatmap_loss)
+                # print(offset_loss)
+                # print(seg_loss)
+
+                # loss = heatmap_loss+offset_loss
+                loss = seg_loss
+            else:
+            
+                pred = model_ins(inp)
+                loss = cal_loss_ins(pred,lab)
             optimizer_ins.zero_grad()
             loss.backward()
             optimizer_ins.step()
@@ -200,19 +243,27 @@ if __name__ == "__main__":
                 lab = data[1].to(device)
                 num_ = len(lab)
                 t_num += num_
-                pred = model_ins(inp)
-                # if model_mode == 'unet':
-                #     loss = cal_loss_ins(pred.cpu(),lab)
-                #     iouval = func_ioucreterion(pred.cpu(),lab,0.5)
-                # if model_mode == 'unetunet':
-                #     loss = cal_loss_ins(pred[0].cpu(),lab)*0.5 + cal_loss_ins(pred[1].cpu(),lab)*0.5
-                #     iouval = np.array(func_ioucreterion(pred[0].cpu(),lab,0.5)).mean()*0.5 + np.array(func_ioucreterion(pred[1].cpu(),lab,0.5)).mean()*0.5
-                # else:
-                loss = cal_loss_ins(pred,lab)
-                if model_mode == 'superpoint':
-                    pred = get_fullheatmap_from_fold(pred)
-                    lab = get_fullheatmap_from_fold(lab)
-                iouval = f1_score(pred,lab)
+                if model_mode == 'PointDet':
+                    heatmap = data[2].to(device)
+                    mask = data[3].to(device)
+
+                    offset = data[4].to(device)
+                    offset_w = data[5].to(device)
+                    image_ori = data[-1]
+                    pred = model_ins(inp)
+                    pheatmap,poffset,psegment = model_ins(inp)
+                    seg_loss = cal_loss_ins(psegment,lab)
+
+                    loss = seg_loss
+                    # loss = heatmap_loss+offset_loss
+                                    
+                    iouval = f1_score(psegment.cpu(),lab.detach().cpu())
+                else:
+                    loss = cal_loss_ins(pred,lab)
+                    if model_mode == 'superpoint':
+                        pred = get_fullheatmap_from_fold(pred)
+                        lab = get_fullheatmap_from_fold(lab)
+                    iouval = f1_score(pred,lab)
                 # loss = cal_loss_ins(pred[0],lab)*0.5 + cal_loss_ins(pred[1],lab)*0.5
                 loss_ = loss.item()
                 f1_ = iouval.item()

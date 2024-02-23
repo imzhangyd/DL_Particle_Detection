@@ -9,6 +9,9 @@ def func_getdataloader(model_mode, txtfile, batch_size, shuffle, num_workers,tra
         from dataset.DetNet_Dataset import cls_Dataset
     elif model_mode == 'deepBlink':
         from dataset.deepBlink_Dataset import cls_Dataset
+    elif model_mode == 'PointDet':
+        from dataset.PointDet_Dataset import cls_Dataset
+        
     dtst_ins = cls_Dataset(txtfile, training=training)
     loads_ins = DataLoader(dataset = dtst_ins, batch_size = batch_size, shuffle = shuffle, num_workers = num_workers)
     return loads_ins

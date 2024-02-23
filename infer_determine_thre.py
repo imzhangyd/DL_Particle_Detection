@@ -14,25 +14,58 @@ import time
 import scipy
 import pandas as pd
 from dataset.dataprocess import func_normlize
+from config.default import _C as cfg
+from config.default import update_config
+import argparse
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Train keypoints network')
+    # general
+    parser.add_argument('--cfg', type=str,default='./config/inference_demo_coco.yaml')
+    # parser.add_argument('--videoFile', type=str, required=True)
+    parser.add_argument('--outputDir', type=str, default='/output/')
+    # parser.add_argument('--inferenceFps', type=int, default=10)
+    parser.add_argument('--visthre', type=float, default=0)
+    parser.add_argument('opts',
+                        help='Modify config options using the command-line',
+                        default=None,
+                        nargs=argparse.REMAINDER)
+
+    args = parser.parse_args()
+
+    # args expected by supporting codebase
+    args.modelDir = ''
+    args.logDir = ''
+    args.dataDir = ''
+    args.prevModelDir = ''
+    return args
+
 now = int(round(time.time()*1000))
 nowname = time.strftime('%Y%m%d_%H_%M_%S',time.localtime(now/1000))
+args = parse_args()
+update_config(cfg, args)
+
 
 # ===================================================================================================
 operation = 'inferance' # train trainval inferance
-val_datapath = '/mnt/data1/ZYDdata/helabdata_train_detection/SP_FC_1C_Control/trainvaltest/val/'
-test_datapath = '/mnt/data1/ZYDdata/helabdata_train_detection/SP_FC_1C_Control/trainvaltest/val/'
-datatype = '16bit' #
-load_epoch = 1
+# val_datapath = '/mnt/data1/ZYDdata/helabdata_train_detection/SP_FC_1C_Control/trainvaltest/val/'
+# test_datapath = '/mnt/data1/ZYDdata/helabdata_train_detection/SP_FC_1C_Control/trainvaltest/val/'
+val_datapath  = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/val_RECEPTOR/SNR2/'
+test_datapath = '/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/test_RECEPTOR/SNR2/'
+
+datatype = '8bit' #
+load_epoch = 8
 bs = 1
-model_mode = 'deepBlink'
+model_mode = 'PointDet'
 gpu_list = [1]
 ckp_folder = './Log/'
-ckp_name = '20240222_20_52_50'
+ckp_name = '20240223_09_58_43'
 ckp_path = os.path.join(ckp_folder,ckp_name+ "/checkpoints/checkpoints_" + str(load_epoch) + ".pth")
 # ====================================================================================================
 opt = {}
 opt['alpha'] = 0.25
 
+opt['cfg'] = cfg
 # record log
 logtxt_path = './Log/log.txt'
 logtxt = open(logtxt_path,'a+')
@@ -76,7 +109,6 @@ model_ins.eval()
 f1_max = 0
 thre_max = 0.1
 for thre in range(1,10):
-    print(f'threshold:{thre}')
     loss_ = 0
     f1_list = []
     precis_list = []
@@ -108,6 +140,13 @@ for thre in range(1,10):
                 lab_coords = data[1][0].numpy()[:,::-1]
             pred = model_ins(inp)[0].permute(1,2,0).detach().cpu().numpy()
             pred_coords = get_coordinate_list(pred, image_size=max(inp.shape), probability=thre*0.1)
+        elif model_mode == 'PointDet':
+            lab_coords = data[1][0].numpy()
+            pheatmap,poffset,psegment = model_ins(inp)
+            psegment = psegment[0,0,:,:].detach().cpu().numpy()
+
+            pred_coords = get_coordinates(psegment,thre*0.1)
+        
         if pred_coords.shape[0] == 0 or lab_coords.shape == 0:
             f1_,precis_,recall_,abs_euclideans = 0,0,0,1e10
         else:
@@ -177,7 +216,12 @@ for data in dataloader_ins_test:
             lab_coords = data[1][0].numpy()[:,::-1]
         pred = model_ins(inp)[0].permute(1,2,0).detach().cpu().numpy()
         pred_coords = get_coordinate_list(pred, image_size=max(inp.shape), probability=thre_max)
-    
+    elif model_mode == 'PointDet':
+        lab_coords = data[1][0].numpy()
+        pheatmap,poffset,psegment = model_ins(inp)
+        psegment = psegment[0,0,:,:].detach().cpu().numpy()
+
+        pred_coords = get_coordinates(psegment,thre*0.1)
     f1_,precis_,recall_,abs_euclideans = compute_metrics_once(pred=pred_coords,true=lab_coords,mdist=3.0)            
     f1_list.append(f1_)
     precis_list.append(precis_)
@@ -194,11 +238,16 @@ for data in dataloader_ins_test:
     # inputimage[:,:,2] = 0
 
     # cv2.imwrite(inf_dir+'/'+name+'.png',inputimage)
-    for x,y in pred_coords:
-        cv2.circle(inputimage, (int(y), int(x)), 5, (0, 255, 255), 1)
-
-    for x,y in lab_coords:
-        cv2.circle(inputimage, (int(y), int(x)), 1, (0, 0, 255), 1)
+    if model_mode == 'PointDet':
+        for y,x in pred_coords:
+            cv2.circle(inputimage, (int(y), int(x)), 5, (0, 255, 255), 1)
+        for y,x in lab_coords:
+            cv2.circle(inputimage, (int(y), int(x)), 1, (0, 0, 255), 1)
+    else:
+        for x,y in pred_coords:
+            cv2.circle(inputimage, (int(y), int(x)), 5, (0, 255, 255), 1)
+        for x,y in lab_coords:
+            cv2.circle(inputimage, (int(y), int(x)), 1, (0, 0, 255), 1)
 
     # print('save:'+name)
     cv2.imwrite(inf_dir+'/'+name+'_f1{:.3f}.png'.format(f1_),inputimage)
