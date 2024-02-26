@@ -3,6 +3,12 @@ Deep learning methods for particle detection in microscopy images.
 
 It covers four deep-learning model, including DetNet[1], deepBlink[2], superpoint[3], and HigherHRNet[4]. HigherHRNet[4] was modified and renamed as PointDet in this repository.
 
+## TODO
+- [ ] Add infer with one thre (when with labels)
+- [ ] Add infer only code (when without labels)
+- [ ] Test PointDet using 16bit image.
+
+
 ## Environment
 The code is developed using python 3.7.3 on Ubuntu 18.04. NVIDIA GPUs are needed. The code is developed and tested using 1 NVIDIA GeForce RTX 2080 Ti card.
 ## Quick Start
