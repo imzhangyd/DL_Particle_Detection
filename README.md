@@ -17,10 +17,39 @@ conda activate dl_particle_detection
 pip install torch==1.8.0+cu111 torchvision==0.9.0+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 3. Clone this repo
-
+```
+git clone https://github.com/imzhangyd/DL_Particle_Detection.git
+cd DL_Particle_Detection
+```
+4. Install dependencies:
+ ```
+ pip install -r requirements.txt
+ ```
 
 ### Data preparation
-Isbi particle tracking challenge
+Make your dataset look like this:
+```
+|-- data
+`-- |-- dataset1
+    `-- |-- train
+        |   |-- image001.tif
+        |   |-- image001.csv
+        |   |-- image002.tif
+        |   |-- image002.csv
+        |   |-- ...
+        `-- val
+        |   |-- image001.tif
+        |   |-- image001.csv
+        |   |-- image002.tif
+        |   |-- image002.csv
+        |   |-- ...
+        `-- test
+        |   |-- image001.tif
+        |   |-- image001.csv
+        |   |-- image002.tif
+        |   |-- image002.csv
+        |   |-- ...
+```
 
 
 
