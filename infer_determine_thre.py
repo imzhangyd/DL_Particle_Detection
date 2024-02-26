@@ -59,7 +59,7 @@ bs = 1
 model_mode = 'PointDet'
 gpu_list = [1]
 ckp_folder = './Log/'
-ckp_name = '20240223_09_58_43'
+ckp_name = '20240223_17_24_54'
 ckp_path = os.path.join(ckp_folder,ckp_name+ "/checkpoints/checkpoints_" + str(load_epoch) + ".pth")
 # ====================================================================================================
 opt = {}
