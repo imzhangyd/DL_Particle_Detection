@@ -4,8 +4,6 @@ Deep learning methods for particle detection in microscopy images.
 It covers four deep-learning model, including DetNet[1], deepBlink[2], superpoint[3], and HigherHRNet[4]. HigherHRNet[4] was modified and renamed as PointDet in this repository.
 
 ## TODO
-- [ ] Add infer with one thre (when with labels)
-- [ ] Add infer only code (when without labels)
 - [ ] Test PointDet using 16bit image.
 
 
