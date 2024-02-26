@@ -51,12 +51,12 @@ Make your dataset look like this:
         |   |-- ...
 ```
 The .csv format:
-
+```
 x0,y0,0
 x1,y1,0
 x2,y2,0
 ...
-
+```
 The coordinate system is based on the left-top corner of the image, where the origin is located. The positive x-direction extends to the right, and the positive y-direction extends downward.
 
 ### Training
