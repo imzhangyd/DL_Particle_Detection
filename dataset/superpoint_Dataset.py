@@ -38,7 +38,7 @@ def get_fold_label(arr, size, fold_time=4):
     # add dustbin channel
     dustbin = np.zeros([Hc,Wc])
     dustbin[np.sum(arr,axis=0) == 0] = 1
-    # # 只保留一个4*4的区域内
+
     # arr[np.sum(arr,axis=0)>1)]
     # assert (np.sum(arr,axis=0)>1).sum() == 0 , print((np.sum(arr,axis=0)>1).sum())
     outarr = np.concatenate([arr,dustbin[np.newaxis,:,:]],axis=0)
@@ -55,22 +55,6 @@ class cls_Dataset(Dataset):
         self.imagepathlist = glob.glob(txtfile+'**.tif')
         self.labelpathlist = [_.replace('tif','csv') for _ in self.imagepathlist]
         self.label = [pd.read_csv(labelpa,header=None).values[:,:2] for labelpa in self.labelpathlist]
-        # self.prepare_data() # DeepBlink
-
-    def prepare_data(self) -> None:
-        """Convert raw labels into prediction matrices.
-        """
-        def __convert(dataset, image_size, cell_size):
-            labels = []
-            for coords in dataset:
-                matrix = get_prediction_matrix(coords, image_size, cell_size)
-                matrix[..., 0] = np.where(
-                    matrix[..., 0], self.smooth_factor, 1 - self.smooth_factor
-                )
-                labels.append(matrix)
-            return np.array(labels)
-
-        self.label = __convert(self.label, self.image_size, self.cell_size)
 
         
     def __getitem__(self, index: int):
@@ -108,22 +92,6 @@ class cls_Dataset_16(Dataset):
         self.imagepathlist = glob.glob(txtfile+'**.tif')
         self.labelpathlist = [_.replace('tif','csv') for _ in self.imagepathlist]
         self.label = [pd.read_csv(labelpa,header=None).values[:,:2] for labelpa in self.labelpathlist]
-        # self.prepare_data() # DeepBlink
-
-    def prepare_data(self) -> None:
-        """Convert raw labels into prediction matrices.
-        """
-        def __convert(dataset, image_size, cell_size):
-            labels = []
-            for coords in dataset:
-                matrix = get_prediction_matrix(coords, image_size, cell_size)
-                matrix[..., 0] = np.where(
-                    matrix[..., 0], self.smooth_factor, 1 - self.smooth_factor
-                )
-                labels.append(matrix)
-            return np.array(labels)
-
-        self.label = __convert(self.label, self.image_size, self.cell_size)
 
         
     def __getitem__(self, index: int):
@@ -159,17 +127,11 @@ class cls_Dataset_onlypred(Dataset):
         self.cell_size = cell_size
         self.smooth_factor = smooth_factor
         self.imagepathlist = glob.glob(txtfile+'**.tif')
-        # self.labelpathlist = [_.replace('tif','csv') for _ in self.imagepathlist]
-        # self.label = [pd.read_csv(labelpa,header=None).values[:,:2] for labelpa in self.labelpathlist]
-        # self.prepare_data() # DeepBlink
 
         
     def __getitem__(self, index: int):
         # get path
         inputpa = self.imagepathlist[index]
-        # lb_ = self.label[index]
-        # lb_img = get_seg_maps(lb_)
-        # lb_fold = get_fold_label(lb_img,512,4)
 
         # read
         input_img = cv2.imread(inputpa)
@@ -199,21 +161,15 @@ class cls_Dataset_onlypred_16(Dataset):
         self.cell_size = cell_size
         self.smooth_factor = smooth_factor
         self.imagepathlist = glob.glob(txtfile+'**.tif')
-        # self.labelpathlist = [_.replace('tif','csv') for _ in self.imagepathlist]
-        # self.label = [pd.read_csv(labelpa,header=None).values[:,:2] for labelpa in self.labelpathlist]
-        # self.prepare_data() # DeepBlink
 
         
     def __getitem__(self, index: int):
         # get path
         inputpa = self.imagepathlist[index]
-        # lb_ = self.label[index]
-        # lb_img = get_seg_maps(lb_)
-        # lb_fold = get_fold_label(lb_img,512,4)
 
         # read
         input_img = cv2.imread(inputpa, -1)
-        minvalue,maxvalue = auto_adjust(input_img, level = 4) # level 对应level*10像素的bar
+        minvalue,maxvalue = auto_adjust(input_img, level = 4)
         clipimage = np.clip(input_img,minvalue,maxvalue)
         enhanceimg = (clipimage - minvalue) / (maxvalue - minvalue)
         inputimage = (enhanceimg * 255.).astype(np.uint8)

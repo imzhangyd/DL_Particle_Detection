@@ -15,13 +15,13 @@ def auto_adjust(imp, level=2):
     imp_max = imp.flatten().max()
     pixels_number = H*W
     limit = pixels_number // 10
-    autoThreshold = pixels_number // 10  # 初始化阈值参数
+    autoThreshold = pixels_number // 10
     if autoThreshold < 10:
-        autoThreshold = AUTO_THRESHOLD  # 设置默认阈值参数
+        autoThreshold = AUTO_THRESHOLD
     else:
-        autoThreshold /= level  # 阈值参数减半
+        autoThreshold /= level
 
-    threshold = pixels_number // autoThreshold  # 根据阈值参数计算阈值
+    threshold = pixels_number // autoThreshold
 
     i = -1
     found = False
@@ -31,9 +31,9 @@ def auto_adjust(imp, level=2):
         count = histogram[i]
         if count > limit:
             count = 0
-        found = count > threshold  # 从左到右找到满足阈值条件的最小直方图值
+        found = count > threshold
        
-    hmin = i  # 最小直方图值对应的像素值
+    hmin = i
     
     i = 256
     found = False
@@ -43,17 +43,17 @@ def auto_adjust(imp, level=2):
         count = histogram[i]
         if count > limit:
             count = 0
-        found = count > threshold  # 从右到左找到满足阈值条件的最大直方图值
+        found = count > threshold
        
-    hmax = i  # 最大直方图值对应的像素值
-    if hmax > hmin:  # 如果找到了有效的最小和最大直方图值对应的像素值
+    hmax = i
+    if hmax > hmin:
         
-        min_value = bins[hmin]  # 计算最小像素值
-        max_value = bins[hmax]  # 计算最大像素值
+        min_value = bins[hmin]
+        max_value = bins[hmax]
         
     else:
         min_value = imp_min
-        max_value = imp_max  # 如果最小和最大像素值相等，则使用统计信息中的最小和最大像素值
+        max_value = imp_max
 
     return min_value,max_value
 
@@ -66,7 +66,7 @@ if __name__ =='__main__':
     for imgpath in imgpathlist:
         imgname = os.path.split(imgpath)[-1]
         image = cv2.imread(imgpath,-1)
-        minvalue,maxvalue = auto_adjust(image, level = 4) # level 对应level*10像素的bar
+        minvalue,maxvalue = auto_adjust(image, level = 4)
         clipimage = np.clip(image,minvalue,maxvalue)
         enhanceimg = (clipimage - minvalue) / (maxvalue - minvalue)
         enhanceimg = (enhanceimg * 255.).astype(np.uint8)

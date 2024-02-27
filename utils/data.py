@@ -1,12 +1,10 @@
-from time import thread_time
 import numpy as np
 import math
 from typing import Tuple
 import operator
 import skimage
-import torch.nn as nn
 
-# 转换坐标成为图，我看看转成什么样子,# deepBlink
+# deepBlink
 def get_prediction_matrix(
     coords: np.ndarray, image_size: int, cell_size: int = 4, size_c: int = None
 ) -> np.ndarray:
@@ -37,7 +35,7 @@ def get_prediction_matrix(
         relative_c = (c - cell_c * cell_size) / cell_size
 
         # Assign values along prediction matrix dimension 3
-        prediction_matrix[cell_r, cell_c] = 1, relative_r, relative_c # 就是在小图上，设置1，然后有一个偏移量。
+        prediction_matrix[cell_r, cell_c] = 1, relative_r, relative_c #
 
     return prediction_matrix
 
@@ -93,7 +91,7 @@ def get_coordinate_list(
         raise ValueError("Matrix must have equal length >= 1 of r, c.")
 
     matrix_size = max(matrix.shape)
-    cell_size = image_size // matrix_size  #cell size 应该是等于2的
+    cell_size = image_size // matrix_size
     coords_r = []
     coords_c = []
 
@@ -152,7 +150,6 @@ def get_probabilities(
 #---------------------Detnet-----superpoint--------- inference
 def get_coordinates(mask: np.ndarray, thre=0.5) -> np.ndarray:
     """Segmentation mask -> coordinate list."""
-    # binary = np.round(mask.squeeze())  # 这一步就是变成二值化
     binary = np.array(mask.squeeze()>thre,dtype = np.uint8)
     label = skimage.measure.label(binary)
     props = skimage.measure.regionprops(label)

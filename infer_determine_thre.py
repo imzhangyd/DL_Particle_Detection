@@ -181,9 +181,6 @@ if __name__ == "__main__":
             recall_list.append(recall_)
             abs_euclideans_list.append(abs_euclideans)
 
-            # for _ in iou:
-            #     epochiou_list.append(_.cpu().numpy())
-
         if np.array(f1_list).mean() > f1_max:
             f1_max = np.array(f1_list).mean()
             thre_max = thre*0.1

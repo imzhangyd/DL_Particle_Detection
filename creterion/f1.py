@@ -180,9 +180,9 @@ def f1_integral(
         )
         return 0.0 if not return_raw else (np.zeros(50), np.zeros(50), cutoffs)
 
-    matrix = scipy.spatial.distance.cdist(pred, true, metric="euclidean") #计算两两之间的距离
+    matrix = scipy.spatial.distance.cdist(pred, true, metric="euclidean")
 
-    if not return_raw: #这直接返回一个在cutoff范围内积分后的结果，否则会返回每一个cutoffs下的得分
+    if not return_raw:
         f1_scores = [_f1_at_cutoff(matrix, pred, true, cutoff) for cutoff in cutoffs]
         return np.trapz(f1_scores, cutoffs) / mdist  # Norm. to 0-1
 

@@ -33,22 +33,22 @@ def dice_loss(y_true, y_pred):
     """Dice score loss corresponding to deepblink.losses.dice_score."""
     return 1 - dice_score(y_true, y_pred)
 
-def rmse(y_true, y_pred): #只想计算前景的坐标预测情况
+def rmse(y_true, y_pred):
     """Calculate root mean square error (rmse) between true and predicted coordinates."""
     # RMSE, takes in the full y_true/y_pred when used as metric.
     # Therefore, do not move the selection outside the function.
     # y_true = y_true[..., 1:]
     # y_pred = y_pred[..., 1:]
 
-    comparison = (y_true == 0) #制作应该为0的mask,背景的mask
+    comparison = (y_true == 0)
 
-    y_true_new = torch.where(comparison, torch.zeros_like(y_true), y_true)#不变
-    y_pred_new = torch.where(comparison, torch.zeros_like(y_pred), y_pred)#将所有背景置为0，
+    y_true_new = torch.where(comparison, torch.zeros_like(y_true), y_true)
+    y_pred_new = torch.where(comparison, torch.zeros_like(y_pred), y_pred)
 
-    sum_rc_coords = torch.sum(y_true, axis=1) #x y 偏移量之和
-    n_true_spots = torch.count_nonzero(sum_rc_coords) #非0数量，前景的数量
+    sum_rc_coords = torch.sum(y_true, axis=1)
+    n_true_spots = torch.count_nonzero(sum_rc_coords)
 
-    squared_displacement_xy_summed = torch.sum(torch.square(y_true_new - y_pred_new), axis=1) #计算的是预测的前景的坐标差的平方和的和，其他的也都是0
+    squared_displacement_xy_summed = torch.sum(torch.square(y_true_new - y_pred_new), axis=1)
     rmse_value = torch.sqrt(
         torch.sum(squared_displacement_xy_summed) / (n_true_spots + _EPSILON)
     )

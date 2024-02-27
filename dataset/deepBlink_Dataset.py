@@ -87,7 +87,7 @@ class cls_Dataset(Dataset):
             labels = []
             for coords in dataset:
                 matrix = get_prediction_matrix(coords, image_size, cell_size)
-                matrix[..., 0] = np.where( #当matrix[...,0] 中不为0的位置，赋值为smooth_factor,其他位置赋值为1 - self.smooth_factor
+                matrix[..., 0] = np.where(
                     matrix[..., 0], self.smooth_factor, 1 - self.smooth_factor
                 )
                 labels.append(matrix)

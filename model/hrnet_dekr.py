@@ -191,7 +191,7 @@ class PoseHigherResolutionNet(nn.Module):
                 else:
                     x_list.append(y_list[j])
             y_list = getattr(self, 'stage{}'.format(i+2))(x_list)
-        # 进行最后的fuse到最高分辨率 y_list包含了三级输出
+        #
         x0_h, x0_w = y_list[0].size(2), y_list[0].size(3)
         x = torch.cat([y_list[0], \
             F.upsample(y_list[1], size=(x0_h, x0_w), mode='bilinear'), \

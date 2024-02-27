@@ -34,7 +34,7 @@ class Soft_dice(nn.Module):
 
 
 
-class EarlyStopping: # 这个是别人写的工具类，大家可以把它放到别的地方
+class EarlyStopping:
     """Early stops the training if validation loss doesn't improve after a given patience."""
 
     def __init__(self, patience=10, verbose=False, delta=0, path='checkpoint.pt', trace_func=print):

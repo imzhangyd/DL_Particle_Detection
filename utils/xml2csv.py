@@ -47,7 +47,7 @@ for SNR_iterm in [1,2,4,7]:
         # print(frame)
         poslist = readXML(xmlpa)
         # print(poslist)
-        # 所有检测的df
+        
         P = [np.array(_) for _ in poslist]
         M = np.vstack(P)
         detection_total = pd.DataFrame(M[:,:3])
@@ -68,7 +68,7 @@ for SNR_iterm in [1,2,4,7]:
 #     # print(frame)
 #     poslist = readXML(xmlpa)
 #     # print(poslist)
-#     # 所有检测的df
+#     # all detection df
 #     P = [np.array(_) for _ in poslist]
 #     M = np.vstack(P)
 #     detection_total = pd.DataFrame(M[:,:3])
