@@ -2,8 +2,11 @@
 # import tensorflow as tf
 # import tensorflow.keras.backend as K
 import torch.nn as nn
-
 import torch
+
+
+__author__ = "Yudong Zhang"
+
 
 _EPSILON = 1e-10
 

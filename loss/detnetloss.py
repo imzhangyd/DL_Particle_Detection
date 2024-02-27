@@ -3,6 +3,9 @@ import numpy as np
 import torch.nn as nn
 
 
+__author__ = "Yudong Zhang"
+
+
 _EPSILON = 1e-10
 
 def soft_dice(true, pred, eps: float = 1e-6):

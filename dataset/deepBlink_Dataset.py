@@ -9,6 +9,10 @@ import pandas as pd
 from utils.data import get_prediction_matrix
 from dataset.enhanceimage import auto_adjust
 
+
+__author__ = "Yudong Zhang"
+
+
 class cls_Dataset_16(Dataset):
     def __init__(self,txtfile,imagesize = 512, cell_size=4,smooth_factor=1,training= True):
         super(cls_Dataset_16,self).__init__()

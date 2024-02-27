@@ -1,6 +1,10 @@
 import torch
 import torch.nn as nn
 
+
+__author__ = "Yudong Zhang"
+
+
 class cls_IOUloss(nn.Module):
     def __init__(self):
         super(cls_IOUloss,self).__init__()

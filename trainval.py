@@ -3,8 +3,6 @@
 Train a particle detection model, evaluate on the validation set after each epoch, 
 and save checkpoints at the end of each epoch.
 
-____Yudong_Zhang____
-
 """
 from optimizer.choose_optimizer import func_getoptimizer
 from dataset.dataload import func_getdataloader,func_getdataloader_16
@@ -28,6 +26,8 @@ from loss.detnetloss import EarlyStopping
 # import ipdb
 import shutil
 
+
+__author__ = "Yudong Zhang"
 
 
 # '/mnt/data1/ZYDdata/helabdata_train_detection/SP_FC_1C_Control/trainvaltest/train/'

@@ -5,6 +5,9 @@ import os
 import glob
 
 
+__author__ = "Yudong Zhang"
+
+
 AUTO_THRESHOLD = 1
 
 def auto_adjust(imp, level=2):

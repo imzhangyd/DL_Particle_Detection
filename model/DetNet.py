@@ -1,6 +1,10 @@
 
 import torch.nn as nn
 
+
+__author__ = "Yudong Zhang"
+
+
 class conv_norm(nn.Module):
     def __init__(self, in_channel, out_channel,kernel_size = 3,padding = 1):
         super().__init__()

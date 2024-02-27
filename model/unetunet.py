@@ -1,6 +1,10 @@
 import torch.nn as nn
 from torch.nn import Linear
 from model.unet import cls_Unet
+
+__author__ = "Yudong Zhang"
+
+
 class cls_UnetUnet(nn.Module):
     def __init__(self,imgchannel,num_class):
         super(cls_UnetUnet, self).__init__()

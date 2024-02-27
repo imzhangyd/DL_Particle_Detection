@@ -6,6 +6,10 @@ import os
 import numpy as np
 import cv2
 
+
+__author__ = "Yudong Zhang"
+
+
 class DoubleConv(nn.Module):
     """(convolution => [BN] => ReLU) * 2"""
 

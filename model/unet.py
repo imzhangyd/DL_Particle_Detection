@@ -3,6 +3,9 @@ import torch
 from torch import sigmoid
 
 
+__author__ = "Yudong Zhang"
+
+
 class cls_conv(nn.Module):
     def __init__(self,in_channels, out_channels):
         super(cls_conv,self).__init__()

@@ -2,6 +2,10 @@
 import cv2
 import numpy as np
 
+
+__author__ = "Yudong Zhang"
+
+
 def func_normlize(image,mode = 'simple_norm'):
 
     if mode == 'simple_norm':

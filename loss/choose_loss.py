@@ -3,6 +3,10 @@ from torch.nn import CrossEntropyLoss,BCELoss
 from loss.deepblinkloss import Combined_dice_rmse
 from loss.detnetloss import Soft_dice
 
+
+__author__ = "Yudong Zhang"
+
+
 def func_getloss(name = 'iou',classnum = 1):
     if name == 'iou':
         return cls_IOUloss()

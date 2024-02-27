@@ -1,5 +1,9 @@
 import torch.nn as nn
 
+
+__author__ = "Yudong Zhang"
+
+
 def init_weights(net, init_type='kaiming', init_gain=0.02):
     """Initialize network weights.
     Parameters:

@@ -8,6 +8,10 @@ import numpy as np
 import pandas as pd
 from dataset.enhanceimage import auto_adjust
 
+
+__author__ = "Yudong Zhang"
+
+
 def get_seg_maps(arr: np.ndarray, size: int = 512):
     """Convert coordinate list into single-pixel segmentation maps."""
 

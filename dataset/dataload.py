@@ -1,6 +1,8 @@
 from torch.utils.data import DataLoader
 
 
+__author__ = "Yudong Zhang"
+
 
 def func_getdataloader(model_mode, txtfile, batch_size, shuffle, num_workers,training=True):
     if model_mode == 'superpoint':

@@ -1,10 +1,6 @@
 """
-
 Assess the checkpoint performance on the validation set to determine the optimal threshold. 
 Utilize this identified threshold to evaluate on the test set.
-
-____Yudong_Zhang____
-
 """
 from dataset.dataload import func_getdataloader,func_getdataloader_16
 from model.choose_net import func_getnetwork
@@ -22,6 +18,11 @@ import pandas as pd
 from dataset.dataprocess import func_normlize
 import argparse
 import shutil
+
+
+__author__ = "Yudong Zhang"
+
+
 def save_args_to_file(args, path):
     with open(path, 'a+') as file:
         for arg, value in vars(args).items():

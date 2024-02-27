@@ -8,6 +8,9 @@ from model.superPoint import SuperPointNet
 from model.hrnet_dekr import PoseHigherResolutionNet
 
 
+__author__ = "Yudong Zhang"
+
+
 def func_getnetwork(name,opt):
     if name == 'unet':
         # return cls_Unet(1,1)

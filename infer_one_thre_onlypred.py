@@ -1,9 +1,5 @@
 """
-
 Utilize one identified threshold to predict on the test set without evaluation.
-
-____Yudong_Zhang____
-
 """
 from dataset.dataload import func_getdataloader,func_getdataloader_16, func_getdataloader_pred, func_getdataloader_pred_16
 from model.choose_net import func_getnetwork
@@ -21,6 +17,11 @@ import pandas as pd
 from dataset.dataprocess import func_normlize
 import argparse
 import shutil
+
+
+__author__ = "Yudong Zhang"
+
+
 def save_args_to_file(args, path):
     with open(path, 'a+') as file:
         for arg, value in vars(args).items():

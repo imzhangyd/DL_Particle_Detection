@@ -2,6 +2,10 @@ import glob
 import pandas as pd
 import numpy as np
 
+
+__author__ = "Yudong Zhang"
+
+
 def readXML(file):
     with open(file) as f:
         lines = f.readlines()

@@ -9,6 +9,10 @@ import pandas as pd
 # from utils.data import get_prediction_matrix
 # from dataset.target_generators import HeatmapGenerator, OffsetGenerator
 
+
+__author__ = "Yudong Zhang"
+
+
 def get_seg_maps(arr: np.ndarray, size: int = 512):
     """Convert coordinate list into single-pixel segmentation maps."""
 

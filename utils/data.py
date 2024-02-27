@@ -4,6 +4,9 @@ from typing import Tuple
 import operator
 import skimage
 
+__author__ = "Yudong Zhang"
+
+
 # deepBlink
 def get_prediction_matrix(
     coords: np.ndarray, image_size: int, cell_size: int = 4, size_c: int = None

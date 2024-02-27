@@ -1,5 +1,9 @@
 import torch
 import torch.nn.functional as F
+
+__author__ = "Yudong Zhang"
+
+
 class SuperPointNet(torch.nn.Module):
   """ Pytorch definition of SuperPoint Network. """
   def __init__(self):
