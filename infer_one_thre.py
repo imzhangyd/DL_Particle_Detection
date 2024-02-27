@@ -1,7 +1,6 @@
 """
 
-Assess the checkpoint performance on the validation set to determine the optimal threshold. 
-Utilize this identified threshold to evaluate on the test set.
+Utilize one identified threshold to evaluate on the test set.
 
 ____Yudong_Zhang____
 
@@ -37,7 +36,6 @@ def parse_args():
     
     # dataset
     parser.add_argument('--test_datapath', type=str, default='/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/testdataset/test_VESICLE/SNR4/')
-    parser.add_argument('--val_datapath', type=str, default='/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/val_VESICLE/SNR4/')
     parser.add_argument('--datatype', choices=['8bit', '16bit'], default='8bit')
 
     # optimizer
@@ -45,6 +43,9 @@ def parse_args():
 
     # If resume
     parser.add_argument('--ckpt_path', type=str, required=True)
+
+    # threshold
+    parser.add_argument('--thre', type=float, default=0.5)
 
     # Only for DetNet
     parser.add_argument('--alpha', type=float, default=0.1)
@@ -59,8 +60,6 @@ def parse_args():
     # Log and save
     parser.add_argument('--log_root', type=str, default='./Log/')
     parser.add_argument('--exp_name', type=str, default='VESICEL_SNR4_deepBlink')
-    parser.add_argument('--use_visdom', type=bool, default=False)
-    parser.add_argument('--port',type=int, default=4006)
 
     args = parser.parse_args()
 
@@ -74,7 +73,6 @@ if __name__ == "__main__":
     
     # dataset
     test_datapath = opt.test_datapath
-    val_datapath = opt.val_datapath
     datatype = opt.datatype
 
     # optimizer
@@ -95,12 +93,12 @@ if __name__ == "__main__":
     
     # save this file
     thisfilepath = os.path.abspath(__file__)
-    shutil.copy(thisfilepath, Log_path+expname+'/eval_determinethre_code.py')
+    shutil.copy(thisfilepath, Log_path+expname+'/eval_onethre_code.py')
     # record log
     logtxt_path = Log_path+expname+'/log.txt'
     logtxt = open(logtxt_path,'a+')
     logtxt.write('\n\n')
-    logtxt.write('===============Eval determine thre===============\n')
+    logtxt.write('===============Eval one thre===============\n')
     logtxt.write('==============={}===============\n'.format(expname))
     logtxt.close()
     save_args_to_file(opt, logtxt_path)
@@ -108,10 +106,8 @@ if __name__ == "__main__":
 
     # load data model
     if datatype == '16bit':
-        dataloader_ins_val = func_getdataloader_16(model_mode, val_datapath,batch_size=1,shuffle=False,num_workers=16,training=False)
         dataloader_ins_test = func_getdataloader_16(model_mode, test_datapath,batch_size=1,shuffle=False,num_workers=16,training=False)
     else:
-        dataloader_ins_val = func_getdataloader(model_mode, val_datapath,batch_size=1,shuffle=False,num_workers=16,training=False)
         dataloader_ins_test = func_getdataloader(model_mode, test_datapath,batch_size=1,shuffle=False,num_workers=16,training=False)
 
     model_ins = func_getnetwork(model_mode,opt)
@@ -127,84 +123,12 @@ if __name__ == "__main__":
     model_ins.load_state_dict(c_checkpoint["model_state_dict"])
     print("==> Loaded pretrianed model checkpoint '{}'.".format(ckp_path))
 
-    thre =None
+    thre_max = opt.thre
     # start inferance
-    print('====>>>Choose Threshold')
+    print(f'====>>>Threshold{thre_max}')
     model_ins.eval()
-    f1_max = 0
-    thre_max = 0.1
-    for thre in range(1,10):
-        loss_ = 0
-        f1_list = []
-        precis_list = []
-        recall_list = []
-        abs_euclideans_list = []
-
-        since = time.time()
-        for data in dataloader_ins_val:
-
-            inp = data[0].to(device)
-            if model_mode == 'superpoint':
-                lab = data[1]
-                lab_heatmap = get_fullheatmap_from_fold(lab)[0]
-                lab_coords = get_coordinates(lab_heatmap, thre=0.5)
-
-                pred = model_ins(inp)
-                pred_heatmap = get_fullheatmap_from_fold(pred)[0].detach().cpu().numpy()
-                pred_coords = get_coordinates(pred_heatmap, thre=thre*0.1)
-            elif model_mode == 'DetNet':
-                lab_coords = data[1][0].numpy()[:,::-1]
-                # lab_coords = get_coordinates(lab, thre=0.5)
-                pred = model_ins(inp)[0].permute(1,2,0).detach().cpu().numpy()
-                pred_coords = get_coordinates(pred, thre=thre*0.1)
-            elif model_mode == 'deepBlink':
-                if datatype == '16bit':
-                    lab = data[1][0]
-                    lab_coords = get_coordinate_list(lab, image_size=max(inp.shape), probability=0.5)
-                else:
-                    lab_coords = data[1][0].numpy()[:,::-1]
-                pred = model_ins(inp)[0].permute(1,2,0).detach().cpu().numpy()
-                pred_coords = get_coordinate_list(pred, image_size=max(inp.shape), probability=thre*0.1)
-            elif model_mode == 'PointDet':
-                lab_coords = data[1][0].numpy()
-                pheatmap,poffset,psegment = model_ins(inp)
-                psegment = psegment[0,0,:,:].detach().cpu().numpy()
-
-                pred_coords = get_coordinates(psegment,thre*0.1)
-            
-            if pred_coords.shape[0] == 0 or lab_coords.shape == 0:
-                f1_,precis_,recall_,abs_euclideans = 0,0,0,1e10
-            else:
-                f1_,precis_,recall_,abs_euclideans = compute_metrics_once(pred=pred_coords,true=lab_coords,mdist=3.0)            
-            f1_list.append(f1_)
-            precis_list.append(precis_)
-            recall_list.append(recall_)
-            abs_euclideans_list.append(abs_euclideans)
-
-            # for _ in iou:
-            #     epochiou_list.append(_.cpu().numpy())
-
-        if np.array(f1_list).mean() > f1_max:
-            f1_max = np.array(f1_list).mean()
-            thre_max = thre*0.1
-
-        # claculate time
-        time_elapsed = time.time() - since
-        # record loss time 
-        message = 'threthold:{:.1f} f1:{:.3f} precision{:.3f} recall{:.3f} rmse{:.3f} elapse:{:.0f}m {:.0f}s'.format(
-            thre*0.1,np.array(f1_list).mean(), 
-            np.array(precis_list).mean(),
-            np.array(recall_list).mean(),
-            np.array(abs_euclideans_list).mean(),
-            time_elapsed // 60, 
-            time_elapsed % 60)
-        print(message)
-        logtxt = open(logtxt_path,'a+')
-        logtxt.write(message+'\n')
-        logtxt.close()
-
-    print('best f1:{:.3f},with threshold:{:.1f}'.format(f1_max,thre_max))
-
+    
+    
     print('===>Start prediction')
 
     # make save folder
@@ -245,8 +169,7 @@ if __name__ == "__main__":
             lab_coords = data[1][0].numpy()
             pheatmap,poffset,psegment = model_ins(inp)
             psegment = psegment[0,0,:,:].detach().cpu().numpy()
-
-            pred_coords = get_coordinates(psegment,thre*0.1)
+            pred_coords = get_coordinates(psegment,thre_max)
         f1_,precis_,recall_,abs_euclideans = compute_metrics_once(pred=pred_coords,true=lab_coords,mdist=3.0)            
         f1_list.append(f1_)
         precis_list.append(precis_)

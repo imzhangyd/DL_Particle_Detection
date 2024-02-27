@@ -22,5 +22,8 @@ def func_getnetwork(name,opt):
     elif name == 'superpoint':
         return(SuperPointNet())
     elif name == 'PointDet':
-        return(PoseHigherResolutionNet(opt['cfg']))
+        from config.default import _C as cfg
+        from config.default import update_config
+        update_config(cfg, opt)
+        return(PoseHigherResolutionNet(cfg))
 

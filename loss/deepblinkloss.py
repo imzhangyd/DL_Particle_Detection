@@ -4,7 +4,6 @@
 import torch.nn as nn
 
 import torch
-# 需要改成torch的版本
 
 _EPSILON = 1e-10
 
