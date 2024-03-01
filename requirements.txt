@@ -1,5 +1,4 @@
 charset-normalizer==3.3.2
-cpools==0.0.0
 idna==3.6
 imageio==2.31.2
 jsonpatch==1.33

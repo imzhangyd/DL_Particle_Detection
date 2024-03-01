@@ -36,11 +36,11 @@ def parse_args():
     parser.add_argument('--model_mode', choices=['deepBlink', 'DetNet', 'superpoint', 'PointDet'], default='deepBlink')
     
     # dataset
-    parser.add_argument('--test_datapath', type=str, default='/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/testdataset/test_VESICLE/SNR4/')
+    parser.add_argument('--test_datapath', type=str, default='/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/testdataset/test_MICROTUBULE/SNR7/')
     parser.add_argument('--datatype', choices=['8bit', '16bit'], default='8bit')
 
     # optimizer
-    parser.add_argument('--gpu_list', nargs='+', default=[1])
+    parser.add_argument('--gpu_list', nargs='+', default=[2])
 
     # If resume
     parser.add_argument('--ckpt_path', type=str, required=True)
@@ -60,7 +60,7 @@ def parse_args():
 
     # Log and save
     parser.add_argument('--log_root', type=str, default='./Log/')
-    parser.add_argument('--exp_name', type=str, default='VESICEL_SNR4_deepBlink')
+    parser.add_argument('--exp_name', type=str, default='MICROTUBULE_SNR7_deepBlink')
 
     args = parser.parse_args()
 
