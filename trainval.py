@@ -42,7 +42,7 @@ def save_args_to_file(args, path):
             file.write(f"{arg}: {value}\n")
         file.write('--------------------------')
 
-def parse_args():
+def parse_args_():
     parser = argparse.ArgumentParser(description='Train keypoints network')
     # model
     parser.add_argument('--model_mode', choices=['deepBlink', 'DetNet', 'superpoint', 'PointDet'], default='deepBlink')
@@ -59,7 +59,7 @@ def parse_args():
     parser.add_argument('--epoch', type=int, default=200)
     parser.add_argument('--decay_every', type=int, default=1e10)
     parser.add_argument('--loss_mode', type=str, default='combined_dice_rmse') # combined_dice_rmse for deepBlink , soft_dice for others
-    parser.add_argument('--gpu_list', nargs='+', default=[1])
+    parser.add_argument('--gpu_list', nargs='+', default=[2])
 
     # If resume
     parser.add_argument('--ckpt_path', type=str, default=None)
@@ -86,7 +86,7 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    opt = parse_args()
+    opt = parse_args_()
     # model
     model_mode = opt.model_mode
     

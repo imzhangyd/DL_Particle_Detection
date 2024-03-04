@@ -31,7 +31,7 @@ def save_args_to_file(args, path):
             file.write(f"{arg}: {value}\n")
         file.write('--------------------------\n')
 
-def parse_args():
+def parse_args_():
     parser = argparse.ArgumentParser(description='Train keypoints network')
     # model
     parser.add_argument('--model_mode', choices=['deepBlink', 'DetNet', 'superpoint', 'PointDet'], default='deepBlink')
@@ -69,7 +69,7 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    opt = parse_args()
+    opt = parse_args_()
     # model
     model_mode = opt.model_mode
     

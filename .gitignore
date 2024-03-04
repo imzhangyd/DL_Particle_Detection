@@ -162,3 +162,5 @@ Log/
 **/*.pth
 **/*.png
 **/*.csv
+pretrained_model/
+detfor_track/

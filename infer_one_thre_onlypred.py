@@ -30,17 +30,17 @@ def save_args_to_file(args, path):
             file.write(f"{arg}: {value}\n")
         file.write('--------------------------\n')
 
-def parse_args():
+def parse_args_():
     parser = argparse.ArgumentParser(description='Train keypoints network')
     # model
     parser.add_argument('--model_mode', choices=['deepBlink', 'DetNet', 'superpoint', 'PointDet'], default='deepBlink')
     
     # dataset
-    parser.add_argument('--test_datapath', type=str, default='/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/testdataset/test_VESICLE/SNR4/')
+    parser.add_argument('--test_datapath', type=str, default='/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/challenge/MICROTUBULE snr 7 density low/')
     parser.add_argument('--datatype', choices=['8bit', '16bit'], default='8bit')
 
     # optimizer
-    parser.add_argument('--gpu_list', nargs='+', default=[1])
+    parser.add_argument('--gpu_list', nargs='+', default=[2])
 
     # If resume
     parser.add_argument('--ckpt_path', type=str, required=True)
@@ -60,7 +60,7 @@ def parse_args():
 
     # Log and save
     parser.add_argument('--log_root', type=str, default='./Log/')
-    parser.add_argument('--exp_name', type=str, default='VESICEL_SNR4_deepBlink')
+    parser.add_argument('--exp_name', type=str, default='MICROTUBULE_SNR7_densitylow_deepBlink')
 
     args = parser.parse_args()
 
@@ -68,7 +68,7 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    opt = parse_args()
+    opt = parse_args_()
     # model
     model_mode = opt.model_mode
     

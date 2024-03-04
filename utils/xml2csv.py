@@ -1,6 +1,8 @@
 import glob
 import pandas as pd
 import numpy as np
+import argparse
+import os
 
 
 __author__ = "Yudong Zhang"
@@ -35,50 +37,33 @@ def readXML(file):
     return poslist
 
 
-# datatype = 'train'
-# imagelist = glob.glob('./Data/'+datatype+'/**.tif')
-xmlroot = "/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/xml/"
 
-for SNR_iterm in [1,2,4,7]:
-    imagelist = glob.glob(
-        "/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/val_VESICLE/SNR"+str(SNR_iterm)+"/**.tif")
+def parse_args_():
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument('--imgfolder', type=str, default='/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/training/MICROTUBULE snr 7 density low')
+    parser.add_argument('--track_xmlpath', type=str, default='/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/training/MICROTUBULE snr 7 density low/MICROTUBULE snr 7 density low.xml')
+
+    opt = parser.parse_args()
+    return opt
+
+
+if __name__ == '__main__':
+
+    opt = parse_args_()
+
+    imagelist = glob.glob(os.path.join(opt.imgfolder, '**.tif'))
+    xmlpa = opt.track_xmlpath
     print('====START=====>>'+str(len(imagelist)))
+
+    poslist = readXML(xmlpa)
+
     for pa in imagelist:
-        print(pa)
-        name = pa.split('/')[-1].split(' t')[0]
-        xmlpa = xmlroot+name+'.xml'
         frame = int(pa.split('/')[-1].split(' t')[1].split(' ')[0])
-        # print(frame)
-        poslist = readXML(xmlpa)
-        # print(poslist)
-        
         P = [np.array(_) for _ in poslist]
         M = np.vstack(P)
         detection_total = pd.DataFrame(M[:,:3])
         detection_total.columns=['pos_x','pos_y','frame']
-        # print(detection_total)
         pos_csv = detection_total[detection_total['frame'] == frame]
-        # print(pos_csv)
         pos_csv.to_csv(pa.replace('tif','csv'),index = None, header = None)
     print('====FINISH=====>>'+str(len(imagelist)))
-
-# imagelist = glob.glob("/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/val_merge/SNR2/**.tif")
-# print('=========>>'+str(len(imagelist)))
-# for pa in imagelist:
-#     print(pa)
-#     name = pa.split('/')[-1].split(' t')[0]
-#     xmlpa = xmlroot+name+'.xml'
-#     frame = int(pa.split('/')[-1].split(' t')[1].split(' ')[0])
-#     # print(frame)
-#     poslist = readXML(xmlpa)
-#     # print(poslist)
-#     # all detection df
-#     P = [np.array(_) for _ in poslist]
-#     M = np.vstack(P)
-#     detection_total = pd.DataFrame(M[:,:3])
-#     detection_total.columns=['pos_x','pos_y','frame']
-#     # print(detection_total)
-#     pos_csv = detection_total[detection_total['frame'] == frame]
-#     # print(pos_csv)
-#     pos_csv.to_csv(pa.replace('tif','csv'),index = None, header = None)
-# print('=========>>'+str(len(imagelist)))
