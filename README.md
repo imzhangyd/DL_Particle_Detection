@@ -97,6 +97,9 @@ python infer_one_thre_onlypred.py \
 --exp_name='VESICLE_SNR4_deepBlink'
 ```
 
+### Detect and track on your own data
+Refer to [Tracking private data.md](https://github.com/imzhangyd/MoTT/blob/main/Tracking%20private%20data.md).
+
 ## Reference
 [1] Wollmann, Thomas, et al. "DetNet: Deep neural network for particle detection in fluorescence microscopy images." 2019 IEEE 16th International Symposium on Biomedical Imaging (ISBI 2019). IEEE, 2019.  
 [2] Eichenberger, Bastian Th, et al. "deepBlink: threshold-independent detection and localization of diffraction-limited spots." Nucleic Acids Research 49.13 (2021): 7292-7297.  
