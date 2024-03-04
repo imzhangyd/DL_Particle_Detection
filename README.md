@@ -13,7 +13,7 @@ The code is developed using python 3.7.3 on Ubuntu 18.04. NVIDIA GPUs are needed
 ### Installation
 1. Create a virtual environment
 ```
-conda create -n dl_particle_detection python==3.7.3
+conda create -n dl_particle_detection python==3.7.3 -y
 conda activate dl_particle_detection
 ```
 2. Install pytorch==1.8.0+cu111 torchvision==0.9.0+cu111

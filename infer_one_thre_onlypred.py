@@ -36,10 +36,12 @@ def parse_args_():
     parser.add_argument('--model_mode', choices=['deepBlink', 'DetNet', 'superpoint', 'PointDet'], default='deepBlink')
     
     # dataset
+    parser.add_argument('--test_datapath', type=str, default='/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/testdataset/test_MICROTUBULE/SNR7/')
     parser.add_argument('--test_datapath', type=str, default='/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/challenge/MICROTUBULE snr 7 density low/')
     parser.add_argument('--datatype', choices=['8bit', '16bit'], default='8bit')
 
     # optimizer
+    parser.add_argument('--gpu_list', nargs='+', default=[2])
     parser.add_argument('--gpu_list', nargs='+', default=[2])
 
     # If resume
@@ -60,6 +62,7 @@ def parse_args_():
 
     # Log and save
     parser.add_argument('--log_root', type=str, default='./Log/')
+    parser.add_argument('--exp_name', type=str, default='MICROTUBULE_SNR7_deepBlink')
     parser.add_argument('--exp_name', type=str, default='MICROTUBULE_SNR7_densitylow_deepBlink')
 
     args = parser.parse_args()

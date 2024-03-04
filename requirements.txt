@@ -1,6 +1,4 @@
-certifi @ file:///croot/certifi_1671487769961/work/certifi
 charset-normalizer==3.3.2
-cpools==0.0.0
 idna==3.6
 imageio==2.31.2
 jsonpatch==1.33
@@ -22,8 +20,6 @@ scipy==1.7.3
 six==1.16.0
 tables==3.7.0
 tifffile==2021.11.2
-torch==1.8.0+cu111
-torchvision==0.9.0+cu111
 tornado==6.2
 typing_extensions==4.7.1
 urllib3==2.0.7
