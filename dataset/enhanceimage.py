@@ -13,7 +13,7 @@ AUTO_THRESHOLD = 1
 def auto_adjust(imp, level=2):
     # (histogram,bins,_)= plt.hist(imp.flatten(),bins=256)
     (histogram,bins)= np.histogram(imp.flatten(),bins=256)
-    H,W = imp.shape
+    H,W = imp.shape[:2]
     imp_min = imp.flatten().min()
     imp_max = imp.flatten().max()
     pixels_number = H*W

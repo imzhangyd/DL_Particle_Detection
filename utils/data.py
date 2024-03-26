@@ -103,6 +103,7 @@ def get_coordinate_list(
 
     # Coordinates of cells > 0.5
     matrix_r, matrix_c, *_ = np.where(matrix[..., 0] > probability, 1, 0).nonzero()
+    score = []
     for r, c in zip(matrix_r, matrix_c):
 
         grid_r = grid[r]
@@ -118,8 +119,9 @@ def get_coordinate_list(
 
         coords_r.append(coord_abs[0])
         coords_c.append(coord_abs[1])
+        score.append(matrix[r, c, 0])
 
-    return np.array([coords_r, coords_c]).T
+    return np.array([coords_r, coords_c]).T, np.array(score)
 
 
 def get_probabilities(

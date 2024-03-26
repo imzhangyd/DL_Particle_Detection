@@ -150,9 +150,18 @@ class cls_Dataset_onlypred(Dataset):
         inputimage = func_normlize(input_img,mode='maxmin_norm')
         inputimage = np.clip(np.round(inputimage*255),0,255).astype(np.uint8)
     
+        inputimage = cv2.cvtColor(inputimage, cv2.COLOR_BGR2GRAY)
+        inputimage = cv2.cvtColor(inputimage, cv2.COLOR_GRAY2BGR)
+        assert len(input_img.shape) == 3
         # norm
-        ip_img = func_normlize(input_img[:,:,0],mode='meanstd')
-        # lb_img = func_normlize(label_img,mode = 'simple_norm')
+        if input_img[:,:,2].max() == 255:
+            ip_img = func_normlize(input_img[:,:,2],mode='meanstd')
+        elif input_img[:,:,1].max() == 255:
+            ip_img = func_normlize(input_img[:,:,1],mode='meanstd')
+        elif input_img[:,:,0].max() == 255:
+            ip_img = func_normlize(input_img[:,:,0],mode='meanstd')
+        else:
+            raise ValueError
         # numpy->torch
         img_ = torch.from_numpy(ip_img).unsqueeze(dim=0).float()
         # mask_ = torch.from_numpy(lb_img).float()
@@ -184,6 +193,8 @@ class cls_Dataset_onlypred_16(Dataset):
         inputpa = self.imagepathlist[index]
         # read
         input_img = cv2.imread(inputpa, -1)
+        if len(input_img.shape) == 3:
+            input_img = input_img[:,:,0]
         # ipdb.set_trace()
         minvalue,maxvalue = auto_adjust(input_img, level = 4) # level 对应level*10像素的bar
         clipimage = np.clip(input_img,minvalue,maxvalue)

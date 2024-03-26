@@ -17,7 +17,7 @@ import pandas as pd
 from dataset.dataprocess import func_normlize
 import argparse
 import shutil
-
+from utils.NMS import nms_point
 
 __author__ = "Yudong Zhang"
 
@@ -37,11 +37,11 @@ def parse_args_():
     
     # dataset
     parser.add_argument('--test_datapath', type=str, default='/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/testdataset/test_MICROTUBULE/SNR7/')
-    parser.add_argument('--test_datapath', type=str, default='/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/challenge/MICROTUBULE snr 7 density low/')
+    # parser.add_argument('--test_datapath', type=str, default='/data/ldap_shared/synology_shared/zyd/data/20220611_detparticle/challenge/MICROTUBULE snr 7 density low/')
     parser.add_argument('--datatype', choices=['8bit', '16bit'], default='8bit')
 
     # optimizer
-    parser.add_argument('--gpu_list', nargs='+', default=[2])
+    # parser.add_argument('--gpu_list', nargs='+', default=[2])
     parser.add_argument('--gpu_list', nargs='+', default=[2])
 
     # If resume
@@ -49,6 +49,7 @@ def parse_args_():
 
     # threshold
     parser.add_argument('--thre', type=float, default=0.5)
+    parser.add_argument('--NMS_dist', type=float,default=5)
 
     # Only for DetNet
     parser.add_argument('--alpha', type=float, default=0.1)
@@ -63,7 +64,7 @@ def parse_args_():
     # Log and save
     parser.add_argument('--log_root', type=str, default='./Log/')
     parser.add_argument('--exp_name', type=str, default='MICROTUBULE_SNR7_deepBlink')
-    parser.add_argument('--exp_name', type=str, default='MICROTUBULE_SNR7_densitylow_deepBlink')
+    # parser.add_argument('--exp_name', type=str, default='MICROTUBULE_SNR7_densitylow_deepBlink')
 
     args = parser.parse_args()
 
@@ -112,7 +113,7 @@ if __name__ == "__main__":
     if datatype == '16bit':
         dataloader_ins_test = func_getdataloader_pred_16(model_mode, test_datapath,batch_size=1,shuffle=False,num_workers=16,training=False)
     else:
-        dataloader_ins_test = func_getdataloader_pred(model_mode, test_datapath,batch_size=1,shuffle=False,num_workers=16,training=False)
+        dataloader_ins_test = func_getdataloader_pred(model_mode, test_datapath,batch_size=1,shuffle=False,num_workers=0,training=False)
 
     model_ins = func_getnetwork(model_mode,opt)
 
@@ -144,8 +145,8 @@ if __name__ == "__main__":
         inp = data[0].to(device)
         name = data[1][0]
         inputimage = data[2][0].numpy()
+        scores = None
         if model_mode == 'superpoint':
-
             pred = model_ins(inp)
             pred_heatmap = get_fullheatmap_from_fold(pred)[0].detach().cpu().numpy()
             pred_coords = get_coordinates(pred_heatmap,thre=thre_max)
@@ -154,7 +155,7 @@ if __name__ == "__main__":
             pred_coords = get_coordinates(pred,thre=thre_max)
         elif model_mode == 'deepBlink':
             pred = model_ins(inp)[0].permute(1,2,0).detach().cpu().numpy()
-            pred_coords = get_coordinate_list(pred, image_size=max(inp.shape), probability=thre_max)
+            pred_coords, scores = get_coordinate_list(pred, image_size=max(inp.shape), probability=thre_max)
         elif model_mode == 'PointDet':
             pheatmap,poffset,psegment = model_ins(inp)
             psegment = psegment[0,0,:,:].detach().cpu().numpy()
@@ -162,16 +163,22 @@ if __name__ == "__main__":
             pred_coords = get_coordinates(psegment,thre_max)
 
         pred_coords_pd = pd.DataFrame(pred_coords,columns=['pos_y','pos_x'])
-        pred_coords_pd.to_csv(inf_dir+'/'+name+'.csv',index = None)
+        # NMS
+        if scores is None:
+            scores = np.array([1.]*len(pred_coords_pd))
+        # thresh = 25
+        newpoints_index = nms_point(pred_coords_pd.values, scores, opt.NMS_dist**2)
+        newpoints = pred_coords_pd.iloc[newpoints_index]
+        newpoints.to_csv(inf_dir+'/'+name+'.csv',index = None)
 
         inputimage = func_normlize(inputimage,mode='maxmin_norm')
         inputimage = np.clip(np.round(inputimage*255),0,255).astype(np.uint8)
 
         if model_mode == 'PointDet':
-            for y,x in pred_coords:
+            for y,x in newpoints.values:
                 cv2.circle(inputimage, (int(y), int(x)), 5, (0, 255, 255), 1)
         else:
-            for x,y in pred_coords:
+            for x,y in newpoints.values:
                 cv2.circle(inputimage, (int(y), int(x)), 5, (0, 255, 255), 1)
 
         # print('save:'+name)
