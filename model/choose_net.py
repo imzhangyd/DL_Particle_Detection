@@ -21,7 +21,7 @@ def func_getnetwork(name,opt):
     elif name == 'deepBlink':
         return(deepBlink(1))
     elif name == 'DetNet':
-        return(cls_DetNet(alpha = opt['alpha']))
+        return(cls_DetNet(alpha = opt.alpha))
     elif name == 'superpoint':
         return(SuperPointNet())
     elif name == 'PointDet':

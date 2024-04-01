@@ -142,6 +142,7 @@ if __name__ == "__main__":
         os.makedirs(inf_dir)
 
     for data in dataloader_ins_test:
+        # print('data')
         inp = data[0].to(device)
         name = data[1][0]
         inputimage = data[2][0].numpy()
@@ -175,11 +176,11 @@ if __name__ == "__main__":
         inputimage = np.clip(np.round(inputimage*255),0,255).astype(np.uint8)
 
         if model_mode == 'PointDet':
-            for y,x in newpoints.values:
-                cv2.circle(inputimage, (int(y), int(x)), 5, (0, 255, 255), 1)
-        else:
             for x,y in newpoints.values:
-                cv2.circle(inputimage, (int(y), int(x)), 5, (0, 255, 255), 1)
+                cv2.circle(inputimage, (int(x), int(y)), 5, (0, 255, 255), 1)
+        else:
+            for y,x in newpoints.values:
+                cv2.circle(inputimage, (int(x), int(y)), 5, (0, 255, 255), 1)
 
         # print('save:'+name)
         cv2.imwrite(inf_dir+'/'+name+'.png',inputimage)

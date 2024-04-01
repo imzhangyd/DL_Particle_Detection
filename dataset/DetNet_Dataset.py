@@ -146,8 +146,20 @@ class cls_Dataset_onlypred(Dataset):
         input_img = cv2.imread(inputpa)
         inputimage = func_normlize(input_img,mode='maxmin_norm')
         inputimage = np.clip(np.round(inputimage*255),0,255).astype(np.uint8)
+        
+        inputimage = cv2.cvtColor(inputimage, cv2.COLOR_BGR2GRAY)
+        inputimage = cv2.cvtColor(inputimage, cv2.COLOR_GRAY2BGR)
+        assert len(input_img.shape) == 3
         # norm
-        ip_img = func_normlize(input_img[:,:,0],mode='meanstd')
+        if input_img[:,:,2].max() == 255:
+            ip_img = func_normlize(input_img[:,:,2],mode='meanstd')
+        elif input_img[:,:,1].max() == 255:
+            ip_img = func_normlize(input_img[:,:,1],mode='meanstd')
+        elif input_img[:,:,0].max() == 255:
+            ip_img = func_normlize(input_img[:,:,0],mode='meanstd')
+        else:
+            raise ValueError
+        # ip_img = func_normlize(input_img[:,:,0],mode='meanstd')
         # lb_img = func_normlize(label_img,mode = 'simple_norm')
         # numpy->torch
         img_ = torch.from_numpy(ip_img).unsqueeze(dim=0).float()
