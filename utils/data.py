@@ -38,10 +38,9 @@ def get_prediction_matrix(
         relative_c = (c - cell_c * cell_size) / cell_size
 
         # Assign values along prediction matrix dimension 3
-        prediction_matrix[cell_r, cell_c] = 1, relative_r, relative_c #
+        prediction_matrix[cell_r, cell_c] = 1, relative_r, relative_c  #
 
     return prediction_matrix
-
 
 
 def absolute_coordinate(
@@ -67,7 +66,6 @@ def absolute_coordinate(
     coord_rel = tuple(map(lambda x: x * cell_size, coord_spot))
     coord_abs = tuple(map(operator.add, coord_cell, coord_rel))
     return coord_abs  # type: ignore
-
 
 
 def get_coordinate_list(
@@ -151,11 +149,10 @@ def get_probabilities(
     return np.array(probabilities)
 
 
-
-#---------------------Detnet-----superpoint--------- inference
+# ---------------------Detnet-----superpoint--------- inference
 def get_coordinates(mask: np.ndarray, thre=0.5) -> np.ndarray:
     """Segmentation mask -> coordinate list."""
-    binary = np.array(mask.squeeze()>thre,dtype = np.uint8)
+    binary = np.array(mask.squeeze() > thre, dtype=np.uint8)
     label = skimage.measure.label(binary)
     props = skimage.measure.regionprops(label)
     coords = np.array([p.centroid for p in props])
@@ -163,11 +160,11 @@ def get_coordinates(mask: np.ndarray, thre=0.5) -> np.ndarray:
 
 
 # --------------superpoint--------------
-def get_fullheatmap_from_fold(sfarr,foldtime=4): # [N,C,H,W]
-    
-    H,W = sfarr.shape[-2:]
-    sfarr = sfarr.permute(0,2,3,1)
-    sfarr = sfarr.reshape([-1,H,W,foldtime,foldtime])
-    sfarr = sfarr.permute(0,1,3,2,4)
-    sfarr = sfarr.reshape([-1,1,H*foldtime,W*foldtime])
+def get_fullheatmap_from_fold(sfarr, foldtime=4):  # [N,C,H,W]
+
+    H, W = sfarr.shape[-2:]
+    sfarr = sfarr.permute(0, 2, 3, 1)
+    sfarr = sfarr.reshape([-1, H, W, foldtime, foldtime])
+    sfarr = sfarr.permute(0, 1, 3, 2, 4)
+    sfarr = sfarr.reshape([-1, 1, H * foldtime, W * foldtime])
     return sfarr

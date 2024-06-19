@@ -187,6 +187,7 @@ if __name__ == "__main__":
             pred_coords = get_coordinates(pred, thre=thre_max)
         elif model_mode == "deepBlink":
             if datatype == "16bit":
+                lab = data[1][0]
                 lab_coords, _ = get_coordinate_list(
                     lab, image_size=max(inp.shape), probability=0.5
                 )
@@ -214,7 +215,12 @@ if __name__ == "__main__":
 
         inputimage = func_normlize(inputimage, mode="maxmin_norm")
         inputimage = np.clip(np.round(inputimage * 255), 0, 255).astype(np.uint8)
-
+        if len(inputimage.shape) < 3:
+            inputimage = np.expand_dims(inputimage, axis=2)
+            inputimage = np.concatenate((inputimage, inputimage, inputimage), axis=2)
+        if len(inputimage.shape) > 3:
+            raise ValueError
+        assert len(inputimage.shape) == 3, print(inputimage.shape)
         # inputimage[:,:,0] = 0
         # inputimage[:,:,2] = 0
 
